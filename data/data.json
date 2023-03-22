@@ -1,0 +1,16 @@
+{
+  "p1":{
+    "id": 1,
+    "name":"Rex",
+    "class":"Commander",
+    "race":"Clone",
+    "battalion": "501st"
+  },
+  "p2":{
+    "id": 2,
+    "name":"Anakin",
+    "class":"Jedi Knight",
+    "race":"Human",
+    "battalion": "212th"
+  }
+}
