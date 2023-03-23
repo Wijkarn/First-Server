@@ -23,6 +23,8 @@ public class Main {
         try {
             //Kontrollera att Socket nummer är ledig. Avbryt om socket är upptagen
             serverSocket = new ServerSocket(4321);
+            System.out.println(serverSocket.getInetAddress());
+            System.out.println(serverSocket.getLocalSocketAddress());
         } catch (IOException e) {
             System.out.println(e);
             return;
@@ -40,12 +42,15 @@ public class Main {
             bWriter = new BufferedWriter(outputSW);
 
             while (true) {
-                //Hämta och skriv ut klientens meddelande
+                //Hämta klientens meddelande och skicka den till openUpData()
+                //Returnerar ett färdigt JSON objekt som skall tillbaka till klienten
                 String message = bReader.readLine();
-                System.out.println("Client: " + message);
+                String returnData = openUpData(message);
 
-                //Skicka acknoledgement svar tillbaka
-                bWriter.write("Message Received");
+                System.out.println("Message Recieved and sent back");
+
+                //Skicka acknoledgement eller svar tillbaka
+                bWriter.write(returnData);
                 bWriter.newLine();
                 bWriter.flush();
 
@@ -61,42 +66,47 @@ public class Main {
 
         } catch (IOException e) {
             System.out.println(e);
+        } catch (ParseException e) {
+            System.out.println(e);
         } finally {
             System.out.println("Server Avslutas");
         }
     }
 
     static String openUpData(String message) throws ParseException, IOException {
-        //steg 1. bygg upp json objekt basserat på inkommande string
+        System.out.println(message);
+        //Steg 1. Bygg upp JSON Obejct basserat på inkommande string
         JSONParser parser = new JSONParser();
         JSONObject jsonOb = (JSONObject) parser.parse(message);
 
-        // Steg 2. läs av url och HTTP-metod för att veta vad clienten vill
+        //Steg 2. Läs av URL och HTTP-metod för att veta vad klienten vill
         String url = jsonOb.get("httpURL").toString();
         String method = jsonOb.get("httpMethod").toString();
 
-        // Steg 2.5. Dela upp URL med .split metod
+        //Steg 2.5. Dela upp URL med .split() metod
         String[] urls = url.split("/");
 
-        // Steg 3. Använd switch case för att kolla vilken data som ska användas
-        switch (urls[0]){
-            case "persons":{
-                if(method == "GET"){
-                    // Vill hämta data om personer
-                    // TODO lägg till logik om det är en specifik person som ska hämtas
+        //Steg 3. Använd en SwitchCase för att kolla vilken data som skall användas
+        switch (urls[0]) {
+            case "persons":
+                if (method.equals("get")) {
+                    //VIll hämta data om personer
+                    //TODO lägg till logik om det är specfik person som skall hämtas
 
-                    // Hämta data från json fil
-                    JSONObject jsonReturn = (JSONObject) parser.parse(new FileReader("data/data.json"));
+                    //Skapa JSONReturn objektet
+                    JSONObject jsonReturn = new JSONObject();
 
-                    // Returnera JSON String
+                    //Hämta data från JSON fil
+                    jsonReturn.put("data", parser.parse(new FileReader("data/data.json")).toString());
+
+                    //Inkluderat HTTP status code
+                    jsonReturn.put("httpStatusCode", 200);
+
+                    //Return
                     return jsonReturn.toJSONString();
                 }
                 break;
-            }
         }
-
-
-
-        return "message received";
+        return "message Recieved";
     }
 }
